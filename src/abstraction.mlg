@@ -141,6 +141,21 @@ VERNAC COMMAND EXTEND Register CLASSIFIED AS SIDEFF STATE opaque_access
   }
 END
 
+VERNAC COMMAND EXTEND BaseType CLASSIFIED AS SIDEFF STATE opaque_access
+| [ "Parametricity" "Base" "Type" global(qid) ] ->
+  {
+    base_type_command qid
+  }
+END
+
+VERNAC COMMAND EXTEND BaseTerm CLASSIFIED AS SIDEFF STATE opaque_access
+| [ "Parametricity" "Base" "Term" global(qid) ] ->
+  {
+    base_term_command qid
+  }
+END
+
+
 VERNAC COMMAND EXTEND Realizer CLASSIFIED AS SIDEFF STATE opaque_access
 | [ "Realizer" constr(c) "as" ident(name) ":=" constr(t) ] ->
   {
