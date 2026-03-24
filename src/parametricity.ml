@@ -123,7 +123,6 @@ let warn_missing_base =
   end
 
 let cast_sort evdref s = match ESorts.kind !evdref s with
-| Prop -> EConstr.mkSProp
 | Set ->
   let sigma, lvl = Evd.new_univ_level_variable UState.univ_flexible !evdref in
   let () = evdref := sigma in
