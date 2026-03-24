@@ -122,6 +122,14 @@ let warn_missing_base =
     Pp.(str "Missing registration for global " ++ Printer.pr_global gr)
   end
 
+let cast_sort evdref s = match ESorts.kind !evdref s with
+| Prop -> EConstr.mkSProp
+| Set ->
+  let sigma, lvl = Evd.new_univ_level_variable UState.univ_flexible !evdref in
+  let () = evdref := sigma in
+  EConstr.mkType (Univ.Universe.make lvl)
+| _ -> EConstr.mkSort s
+
 (* [prime order index c] replace all the free variable in c by its [index]-projection where 0 <= index < order.
  * Exemple, if c is a well-defined term in context x, y, z |- c, then [prime order index c] is
  * c[x_index/x,y_index/y, z_index/z] and is well-defined in:
@@ -143,6 +151,9 @@ let prime env sigma order index c =
         let () = warn_missing_base gr in
         c
       end
+    | Sort s ->
+      if Int.equal index 1 then cast_sort sigma s
+      else c
     | _ -> map_with_binders !sigma ((+) 1) aux depth c
   in aux 0 c
 
@@ -1372,4 +1383,23 @@ and translate_mind_inductive name order evdr env ikn mut_entry inst (env_params,
         List.map (to_constr !evdr) result
       end
   }
+
+let relation order evd env t : constr =
+  (* FIXME: properly compute relevances instead of hacking here *)
+  CWarnings.with_warn "-bad-relevance" begin fun () ->
+    relation order evd env t
+  end ()
+
+let translate order evd env t : constr =
+  (* FIXME: properly compute relevances instead of hacking here *)
+  CWarnings.with_warn "-bad-relevance" begin fun () ->
+    translate order evd env t
+  end ()
+
+let translate_mind_body name order evdr env kn b inst : mutual_inductive_entry =
+  (* FIXME: properly compute relevances instead of hacking here *)
+  CWarnings.with_warn "-bad-relevance" begin fun () ->
+    translate_mind_body name order evdr env kn b inst
+  end ()
+
 end
