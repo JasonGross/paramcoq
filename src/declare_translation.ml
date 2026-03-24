@@ -17,7 +17,7 @@ open Parametricity
 
 let is_heterogeneous_ref arity pos ref =
   try
-    let () = ignore (Relations.get_heterogeneous ref ~arity ~pos : Names.GlobRef.t) in
+    let () = ignore (Relations.get_heterogeneous ref ~arity ~pos : Names.GlobRef.t option) in
     false
   with Not_found ->
     true

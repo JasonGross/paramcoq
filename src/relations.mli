@@ -30,4 +30,4 @@ val get_variable : int -> Names.variable -> Names.Constant.t
 val is_referenced : int -> GlobRef.t -> bool
 
 val declare_heterogeneous : Names.GlobRef.t -> Names.GlobRef.t list -> unit
-val get_heterogeneous : Names.GlobRef.t -> arity:int -> pos:int -> Names.GlobRef.t
+val get_heterogeneous : Names.GlobRef.t -> arity:int -> pos:int -> Names.GlobRef.t option (* None means identity *)
