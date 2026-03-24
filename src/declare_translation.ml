@@ -204,10 +204,11 @@ let translate_inductive_command arity c name =
   declare_inductive name arity evd env pind
 
 let declare_realizer ~opaque_access ?(continuation = default_continuation) ?kind ?real arity evd env name (var : constr)  =
-  let gref = (match EConstr.kind !evd var with
-     | Var id -> Names.GlobRef.VarRef id
-     | Const (cst, _) -> Names.GlobRef.ConstRef cst
-     | _ -> error (Pp.str "Realizer works only for variables and constants.")) in
+  let gref = match EConstr.destRef !evd var with
+  | (gr, _) -> gr
+  | exception Constr.DestKO ->
+    error (Pp.str "Realizer works only for globals.")
+  in
   let evd', typ = Typing.type_of env !evd var in
   evd := evd';
   let module P = Parametricity.WithOpaqueAccess(struct let access = opaque_access end) in
