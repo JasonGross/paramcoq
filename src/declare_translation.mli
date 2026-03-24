@@ -39,3 +39,9 @@ val translate_command :
 val register_command :
   opaque_access:Global.indirect_accessor ->
   Libnames.qualid -> Libnames.qualid list -> unit
+val base_type_command :
+  opaque_access:Global.indirect_accessor ->
+  Libnames.qualid -> unit
+val base_term_command :
+  opaque_access:Global.indirect_accessor ->
+  Libnames.qualid -> unit

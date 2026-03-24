@@ -548,3 +548,38 @@ let translate_command ~opaque_access arity c name =
   let kind = Decls.(IsDefinition Definition) in
   let _ : Declare.Proof.t option = declare_abstraction ~opaque_access ~opaque ~poly ~scope ~kind arity (ref evd) env c name in
   ()
+
+let base_type_command ~opaque_access qid =
+  let env = Global.env () in
+  let sigma = Evd.from_env env in
+  let gr = intern_reference_to_name qid in
+  let sigma, c = Evd.fresh_global env sigma gr in
+  let typ = Retyping.get_type_of env sigma c in
+  let evdref = ref sigma in
+  let ans = Parametricity.prime env evdref 2 1 typ in
+  let sigma = !evdref in
+  Feedback.msg_notice (Printer.pr_leconstr_env env sigma ans)
+
+let base_term_command ~opaque_access qid =
+  let env = Global.env () in
+  let sigma = Evd.from_env env in
+  let gr = intern_reference_to_name qid in
+  let cst = match gr with
+  | ConstRef cst -> cst
+  | _ -> CErrors.user_err (Pp.str "Base Term only works for constants")
+  in
+  let sigma, c = Evd.fresh_global env sigma gr in
+  let (_, u) = destRef sigma c in
+  let cb = Global.lookup_constant cst in
+  let body = match cb.const_body with
+  | Def def -> def
+  | OpaqueDef opaque ->
+    fst (Global.force_proof opaque_access opaque)
+  | Primitive _ | Undef _ | Symbol _ -> CErrors.user_err (Pp.str "Constant lacks a body")
+  in
+  let body = EConstr.of_constr body in
+  let body = EConstr.Vars.subst_instance_constr u body in
+  let evdref = ref sigma in
+  let ans = Parametricity.prime env evdref 2 1 body in
+  let sigma = !evdref in
+  Feedback.msg_notice (Printer.pr_leconstr_env env sigma ans)
