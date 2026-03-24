@@ -90,9 +90,7 @@ let declare_heterogeneous gr grs =
 
 let get_heterogeneous gr ~arity ~pos =
   let map = IntMap.find arity !bases in
-  match (GMap.find gr map).(pos) with
-  | None -> raise Not_found
-  | Some gr -> gr
+  (GMap.find gr map).(pos)
 
 let declare_constant_relation (n : int) (c : Constant.t) (c_R : Constant.t) =
   declare_relation n (GlobRef.ConstRef c) (GlobRef.ConstRef c_R)

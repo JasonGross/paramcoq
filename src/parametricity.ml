@@ -130,9 +130,12 @@ let rec has_cast sigma t =
  let t = snd (decompose_prod sigma t) in
  isCast sigma t || fold sigma (fun acc t -> acc || has_cast sigma t) false t
 
-
-
 let prop_or_type _env _evdr s = s
+
+let warn_missing_base =
+  CWarnings.create ~name:"parametricity-missing-base" begin fun gr ->
+    Pp.(str "Missing registration for global " ++ Printer.pr_global gr)
+  end
 
 (* [prime order index c] replace all the free variable in c by its [index]-projection where 0 <= index < order.
  * Exemple, if c is a well-defined term in context x, y, z |- c, then [prime order index c] is
@@ -146,11 +149,14 @@ let prime env sigma order index c =
     | Var _ | Const _ | Ind _ | Construct _ ->
       let (gr, _) = destRef !sigma c in
       begin match Relations.get_heterogeneous gr ~arity:order ~pos:index with
-      | ngr ->
+      | None -> c
+      | Some ngr ->
         let evd, c = Evd.fresh_global env !sigma ngr in
         let () = sigma := evd in
         c
-      | exception Not_found -> c
+      | exception Not_found ->
+        let () = warn_missing_base gr in
+        c
       end
     | _ -> map_with_binders !sigma ((+) 1) aux depth c
   in aux 0 c
