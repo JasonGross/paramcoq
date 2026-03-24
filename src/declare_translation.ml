@@ -40,6 +40,12 @@ let is_heterogeneous env sigma arity pos c =
     false
   with Outside -> true
 
+(* Hack to recompute the relevances / universe constraints *)
+let recheck env evd t =
+  let sigma, t = Typing.solve_evars env !evd t in
+  let () = evd := sigma in
+  t
+
 [@@@ocaml.warning "-40"]
 let error = CErrors.user_err
 let ongoing_translation = Summary.ref false ~name:"parametricity ongoing translation"
@@ -105,9 +111,11 @@ let declare_abstraction ~opaque_access ?(opaque = false) ?(continuation = defaul
   let b_R = P.relation arity evdr env b in
   let sub = range (fun k -> prime env evdr arity k a) arity in
   let b_R = EConstr.Vars.substl sub b_R in
+  let b_R = recheck env evdr b_R in
   let a_R = fun evd ->
     let evdr = ref evd in
     let a_R = P.translate arity evdr env a in
+    let a_R = recheck env evdr a_R in
     debug [`Abstraction] "a_R = " env !evdr a_R;
     debug_evar_map Debug.all "abstraction, evar_map = " env !evdr;
     !evdr, a_R
