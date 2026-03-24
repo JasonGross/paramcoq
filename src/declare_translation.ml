@@ -42,9 +42,11 @@ let is_heterogeneous env sigma arity pos c =
 
 (* Hack to recompute the relevances / universe constraints *)
 let recheck env evd t =
+  CWarnings.with_warn "-bad-relevance" begin fun () ->
   let sigma, t = Typing.solve_evars env !evd t in
   let () = evd := sigma in
   t
+  end ()
 
 [@@@ocaml.warning "-40"]
 let error = CErrors.user_err
