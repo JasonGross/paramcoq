@@ -631,3 +631,42 @@ let realizer_base_term_command ~opaque_access qid =
   let ans = compute_realizer_term ~opaque_access env evdref c in
   let sigma = !evdref in
   Feedback.msg_notice (Printer.pr_leconstr_env env sigma ans)
+
+(* Ltac2 external registrations *)
+let () =
+  let open Proofview.Notations in
+  let open Ltac2_plugin.Tac2ffi in
+  let open Ltac2_plugin.Tac2externals in
+  let plugin = "coq-paramcoq.plugin" in
+  let opaque_access = Library.indirect_accessor in
+  let define name spec f =
+    define { Ltac2_plugin.Tac2expr.mltac_plugin = plugin; mltac_tactic = name } spec f
+  in
+  define "parametricity_base_type" (constr @-> tac constr) (fun c ->
+    Proofview.tclENV >>= fun env ->
+    Proofview.tclEVARMAP >>= fun sigma ->
+    let evdref = ref sigma in
+    let ans = compute_base_type env evdref c in
+    Proofview.Unsafe.tclEVARS !evdref >>= fun () ->
+    Proofview.tclUNIT ans);
+  define "parametricity_base_term" (constr @-> tac constr) (fun c ->
+    Proofview.tclENV >>= fun env ->
+    Proofview.tclEVARMAP >>= fun sigma ->
+    let evdref = ref sigma in
+    let ans = compute_base_term ~opaque_access env evdref c in
+    Proofview.Unsafe.tclEVARS !evdref >>= fun () ->
+    Proofview.tclUNIT ans);
+  define "realizer_base_type" (constr @-> tac constr) (fun c ->
+    Proofview.tclENV >>= fun env ->
+    Proofview.tclEVARMAP >>= fun sigma ->
+    let evdref = ref sigma in
+    let ans = compute_realizer_type ~opaque_access env evdref c in
+    Proofview.Unsafe.tclEVARS !evdref >>= fun () ->
+    Proofview.tclUNIT ans);
+  define "realizer_base_term" (constr @-> tac constr) (fun c ->
+    Proofview.tclENV >>= fun env ->
+    Proofview.tclEVARMAP >>= fun sigma ->
+    let evdref = ref sigma in
+    let ans = compute_realizer_term ~opaque_access env evdref c in
+    Proofview.Unsafe.tclEVARS !evdref >>= fun () ->
+    Proofview.tclUNIT ans)
