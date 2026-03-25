@@ -29,11 +29,9 @@ friendly (lack of good error messages) and still contains bugs. But it
 is usable enough to "translate" a large chunk of the standard library."""
 
 messages: ["/!\ This is the last release of paramcoq, more details on https://github.com/coq-community/paramcoq/blob/master/README.md"]
-build: [make "-j%{jobs}%"]
-install: [
-  [make "install"]
-  [make "-C" "test-suite" "examples"] {with-test}
-]
+build: [["dune" "build" "-p" name "-j" jobs]]
+install: [["dune" "install" "-p" name]]
+run-test: [["dune" "build" "-p" name "-j" jobs "@runtest"]]
 depends: [
   "coq"
 ]
