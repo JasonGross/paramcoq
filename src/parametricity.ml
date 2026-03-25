@@ -132,9 +132,24 @@ let rec has_cast sigma t =
 
 let prop_or_type _env _evdr s = s
 
+let print_missing_globals_fq = ref false
+let () =
+  Goptions.declare_bool_option
+    { Goptions.optdepr  = None;
+      Goptions.optstage = Interp;
+      Goptions.optkey   = ["Printing"; "Parametricity"; "Missing"; "Globals"; "Fully"; "Qualified"];
+      Goptions.optread  = (fun () -> !print_missing_globals_fq);
+      Goptions.optwrite = (:=) print_missing_globals_fq }
+
+let pr_global_for_missing gr =
+  if !print_missing_globals_fq then
+    Libnames.pr_path (Nametab.path_of_global gr)
+  else
+    Printer.pr_global gr
+
 let warn_missing_base =
   CWarnings.create ~name:"parametricity-missing-base" begin fun gr ->
-    Pp.(str "Missing registration for global " ++ Printer.pr_global gr)
+    Pp.(str "Missing registration for global " ++ pr_global_for_missing gr)
   end
 
 let cast_sort evdref s = match ESorts.kind !evdref s with
@@ -492,9 +507,8 @@ and translate_constant order (evd : Evd.evar_map ref) env cst : constr =
             in
             CoqConstants.transport env evd [| etyp; edef; pred; res; fold; proof_opaque |]
         | _ ->
-            error
-              (Pp.str (Printf.sprintf "The constant '%s' has no registered translation."
-    (KerName.to_string (Constant.user (fst cst))))))
+            let msg = Pp.(str "The constant '" ++ pr_global_for_missing (GlobRef.ConstRef (fst cst)) ++ str "' has no registered translation.") in
+            error msg)
 
 and translate_rel_context order evd env rc =
   let _, ll = Context.Rel.fold_outside (fun decl (env, acc) ->
@@ -525,8 +539,7 @@ and translate_inductive order env evdr (ind, names) =
    let evd, constr = fresh_global ~rigid:Evd.univ_rigid ~names env !evdr (Relations.get_inductive order ind) in
    evdr := evd;
    constr
-  with Not_found -> error (Pp.str (Printf.sprintf "The inductive '%s' has no registered translation."
-    (KerName.to_string (MutInd.user (fst ind)))))
+  with Not_found -> error Pp.(str "The inductive '" ++ pr_global_for_missing (GlobRef.IndRef ind) ++ str "' has no registered translation.")
 
 and translate_constructor order env evdr ((ind, i), u) =
   let (ind, u) = destInd !evdr (translate_inductive order env evdr (ind,u)) in
@@ -535,8 +548,7 @@ and translate_constructor order env evdr ((ind, i), u) =
 and translate_case_info order env ci =
   let ci_ind =
     try Globnames.destIndRef (Relations.get_inductive order ci.ci_ind)
-    with Not_found -> error (Pp.str (Printf.sprintf "The inductive '%s' has no registered translation."
-    (KerName.to_string (MutInd.user (fst ci.ci_ind))))) in
+    with Not_found -> error Pp.(str "The inductive '" ++ pr_global_for_missing (GlobRef.IndRef ci.ci_ind) ++ str "' has no registered translation.") in
   {
     ci_ind = ci_ind;
     ci_npar = (order + 1) * ci.ci_npar;
