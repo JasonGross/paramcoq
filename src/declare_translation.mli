@@ -45,3 +45,20 @@ val base_type_command :
 val base_term_command :
   opaque_access:Global.indirect_accessor ->
   Libnames.qualid -> unit
+val realizer_base_type_command :
+  opaque_access:Global.indirect_accessor ->
+  Libnames.qualid -> unit
+val realizer_base_term_command :
+  opaque_access:Global.indirect_accessor ->
+  Libnames.qualid -> unit
+val compute_base_type :
+  Environ.env -> Evd.evar_map ref -> EConstr.t -> EConstr.t
+val compute_base_term :
+  opaque_access:Global.indirect_accessor ->
+  Environ.env -> Evd.evar_map ref -> EConstr.t -> EConstr.t
+val compute_realizer_type :
+  opaque_access:Global.indirect_accessor ->
+  Environ.env -> Evd.evar_map ref -> EConstr.t -> EConstr.t
+val compute_realizer_term :
+  opaque_access:Global.indirect_accessor ->
+  Environ.env -> Evd.evar_map ref -> EConstr.t -> EConstr.t

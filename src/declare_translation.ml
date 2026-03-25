@@ -560,14 +560,61 @@ let translate_command ~opaque_access arity c name =
   let _ : Declare.Proof.t option = declare_abstraction ~opaque_access ~opaque ~poly ~scope ~kind arity (ref evd) env c name in
   ()
 
+let compute_base_type env evdref c =
+  let typ = Retyping.get_type_of env !evdref c in
+  Parametricity.prime env evdref 2 1 typ
+
+let compute_base_term ~opaque_access env evdref c =
+  let sigma = !evdref in
+  let (gr, u) = destRef sigma c in
+  let cst = match gr with
+  | Names.GlobRef.ConstRef cst -> cst
+  | _ -> CErrors.user_err (Pp.str "Base Term only works for constants")
+  in
+  let cb = Global.lookup_constant cst in
+  let body = Declarations.(match cb.const_body with
+  | Def def -> def
+  | OpaqueDef opaque ->
+    fst (Global.force_proof opaque_access opaque)
+  | Primitive _ | Undef _ | Symbol _ -> CErrors.user_err (Pp.str "Constant lacks a body"))
+  in
+  let body = EConstr.of_constr body in
+  let body = EConstr.Vars.subst_instance_constr u body in
+  Parametricity.prime env evdref 2 1 body
+
+let compute_realizer_type ~opaque_access env evdref c =
+  let module P = Parametricity.WithOpaqueAccess(struct let access = opaque_access end) in
+  let typ = Retyping.get_type_of env !evdref c in
+  let typ_R = P.relation 2 evdref env typ in
+  let sub = range (fun i -> Parametricity.prime env evdref 2 i c) 2 in
+  Vars.substl sub typ_R
+
+let compute_realizer_term ~opaque_access env evdref c =
+  let module P = Parametricity.WithOpaqueAccess(struct let access = opaque_access end) in
+  let sigma = !evdref in
+  let (gr, u) = destRef sigma c in
+  let cst = match gr with
+  | Names.GlobRef.ConstRef cst -> cst
+  | _ -> CErrors.user_err (Pp.str "Realizer Base Term only works for constants")
+  in
+  let cb = Global.lookup_constant cst in
+  let body = Declarations.(match cb.const_body with
+  | Def def -> def
+  | OpaqueDef opaque ->
+    fst (Global.force_proof opaque_access opaque)
+  | Primitive _ | Undef _ | Symbol _ -> CErrors.user_err (Pp.str "Constant lacks a body"))
+  in
+  let body = EConstr.of_constr body in
+  let body = EConstr.Vars.subst_instance_constr u body in
+  P.translate 2 evdref env body
+
 let base_type_command ~opaque_access qid =
   let env = Global.env () in
   let sigma = Evd.from_env env in
   let gr = intern_reference_to_name qid in
   let sigma, c = Evd.fresh_global env sigma gr in
-  let typ = Retyping.get_type_of env sigma c in
   let evdref = ref sigma in
-  let ans = Parametricity.prime env evdref 2 1 typ in
+  let ans = compute_base_type env evdref c in
   let sigma = !evdref in
   Feedback.msg_notice (Printer.pr_leconstr_env env sigma ans)
 
@@ -575,22 +622,28 @@ let base_term_command ~opaque_access qid =
   let env = Global.env () in
   let sigma = Evd.from_env env in
   let gr = intern_reference_to_name qid in
-  let cst = match gr with
-  | ConstRef cst -> cst
-  | _ -> CErrors.user_err (Pp.str "Base Term only works for constants")
-  in
   let sigma, c = Evd.fresh_global env sigma gr in
-  let (_, u) = destRef sigma c in
-  let cb = Global.lookup_constant cst in
-  let body = match cb.const_body with
-  | Def def -> def
-  | OpaqueDef opaque ->
-    fst (Global.force_proof opaque_access opaque)
-  | Primitive _ | Undef _ | Symbol _ -> CErrors.user_err (Pp.str "Constant lacks a body")
-  in
-  let body = EConstr.of_constr body in
-  let body = EConstr.Vars.subst_instance_constr u body in
   let evdref = ref sigma in
-  let ans = Parametricity.prime env evdref 2 1 body in
+  let ans = compute_base_term ~opaque_access env evdref c in
+  let sigma = !evdref in
+  Feedback.msg_notice (Printer.pr_leconstr_env env sigma ans)
+
+let realizer_base_type_command ~opaque_access qid =
+  let env = Global.env () in
+  let sigma = Evd.from_env env in
+  let gr = intern_reference_to_name qid in
+  let sigma, c = Evd.fresh_global env sigma gr in
+  let evdref = ref sigma in
+  let ans = compute_realizer_type ~opaque_access env evdref c in
+  let sigma = !evdref in
+  Feedback.msg_notice (Printer.pr_leconstr_env env sigma ans)
+
+let realizer_base_term_command ~opaque_access qid =
+  let env = Global.env () in
+  let sigma = Evd.from_env env in
+  let gr = intern_reference_to_name qid in
+  let sigma, c = Evd.fresh_global env sigma gr in
+  let evdref = ref sigma in
+  let ans = compute_realizer_term ~opaque_access env evdref c in
   let sigma = !evdref in
   Feedback.msg_notice (Printer.pr_leconstr_env env sigma ans)
