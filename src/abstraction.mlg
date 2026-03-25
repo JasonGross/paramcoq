@@ -19,6 +19,7 @@ open Feedback
 open Stdarg
 open Parametricity
 open Declare_translation
+
 }
 
 VERNAC COMMAND EXTEND SetParametricityTactic CLASSIFIED AS SIDEFF
@@ -157,6 +158,14 @@ END
 
 
 VERNAC COMMAND EXTEND Realizer CLASSIFIED AS SIDEFF STATE opaque_access
+| [ "Realizer" "Type" global(qid) ] ->
+  {
+    realizer_base_type_command qid
+  }
+| [ "Realizer" "Term" global(qid) ] ->
+  {
+    realizer_base_term_command qid
+  }
 | [ "Realizer" constr(c) "as" ident(name) ":=" constr(t) ] ->
   {
     realizer_command Parametricity.default_arity (Some name) c t
