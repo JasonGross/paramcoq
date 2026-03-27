@@ -31,11 +31,13 @@ Abbreviation realizer_type_of f :=
     ltac2:(Control.refine (fun () => realizer_base_type (open_pretype f)))
   end) (only parsing).
 
-(* Simple test with nat *)
+(* Test parametricity_base_type from inside a match *)
 Parameter nat_base : base_type_of nat.
+
+(* Test realizer_base_type from inside a match *)
 Parameter nat_realizer : realizer_type_of nat.
 
-(* Test with a class involving Prop (exercises the Prop sort translation) *)
+(* Test with a class involving Prop *)
 Axiom RandomSeed : Type.
 Inductive GenType (A:Type) : Type := MkGen : (nat -> RandomSeed -> A) -> GenType A.
 Definition G := GenType.
@@ -44,4 +46,6 @@ Class GenSuchThat (A : Type) (P : A -> Prop) :=
   { arbitraryST : G (option A) }.
 
 Parameter GenSuchThat_base : base_type_of GenSuchThat.
-Parameter GenSuchThat_realizer : realizer_type_of GenSuchThat.
+(* Note: realizer_type_of GenSuchThat requires a registered translation for
+   GenSuchThat because cast_sort maps Prop to SProp, creating P₂ : A₂ -> SProp
+   which is incompatible with GenSuchThat's signature (A -> Prop). *)

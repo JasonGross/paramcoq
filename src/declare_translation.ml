@@ -587,7 +587,8 @@ let compute_realizer_type ~opaque_access env evdref c =
   let typ = Retyping.get_type_of env !evdref c in
   let typ_R = P.translate_type 2 evdref env typ in
   let sub = range (fun i -> Parametricity.prime env evdref 2 i c) 2 in
-  Vars.substl sub typ_R
+  let typ_R = Vars.substl sub typ_R in
+  recheck env evdref typ_R
 
 let compute_realizer_term ~opaque_access env evdref c =
   let module P = Parametricity.WithOpaqueAccess(struct let access = opaque_access end) in

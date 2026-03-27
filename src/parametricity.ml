@@ -138,6 +138,7 @@ let warn_missing_base =
   end
 
 let cast_sort evdref s = match ESorts.kind !evdref s with
+| Prop -> EConstr.mkSProp
 | Set ->
   let sigma, lvl = Evd.new_univ_level_variable UState.univ_flexible !evdref in
   let () = evdref := sigma in
@@ -319,8 +320,17 @@ let rec relation order evd env (t : constr) : constr =
   debug [`Relation] "input =" env.env !evd t;
   let res = match kind !evd t with
     | Sort s ->
-      let r = Retyping.relevance_of_sort s in
-      fold_nat (fun _ -> mkArrow (mkRel order) r) (prop_or_type env evd t) order
+      fold_nat (fun k acc ->
+        (* For index 1, cast_sort may change the sort (e.g. Prop -> SProp),
+           which changes the relevance of the corresponding arrow. *)
+        let r = if Int.equal k 1 then
+          match ESorts.kind !evd s with
+          | Prop -> ERelevance.irrelevant (* cast_sort maps Prop to SProp *)
+          | _ -> Retyping.relevance_of_sort s
+        else
+          Retyping.relevance_of_sort s
+        in
+        mkArrow (mkRel order) r acc) (prop_or_type env evd t) order
     | Prod (x, a, b) ->
         let x = Context.map_annot (Namegen.named_hd env.env !evd a) x in
         let decl = RelDecl.LocalAssum (x, a) in
