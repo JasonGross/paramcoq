@@ -684,29 +684,29 @@ let () =
     define { Ltac2_plugin.Tac2expr.mltac_plugin = plugin; mltac_tactic = name } spec f
   in
   define "parametricity_base_type" (constr @-> tac constr) (fun c ->
-    Proofview.tclENV >>= fun env ->
     Proofview.tclEVARMAP >>= fun sigma ->
+    let env = Global.env () in
     let evdref = ref sigma in
     let ans = compute_base_type env evdref c in
     Proofview.Unsafe.tclEVARS !evdref >>= fun () ->
     Proofview.tclUNIT ans);
   define "parametricity_base_term" (constr @-> tac constr) (fun c ->
-    Proofview.tclENV >>= fun env ->
     Proofview.tclEVARMAP >>= fun sigma ->
+    let env = Global.env () in
     let evdref = ref sigma in
     let ans = compute_base_term ~opaque_access env evdref c in
     Proofview.Unsafe.tclEVARS !evdref >>= fun () ->
     Proofview.tclUNIT ans);
   define "realizer_base_type" (constr @-> tac constr) (fun c ->
-    Proofview.tclENV >>= fun env ->
     Proofview.tclEVARMAP >>= fun sigma ->
+    let env = Global.env () in
     let evdref = ref sigma in
     let ans = compute_realizer_type ~opaque_access env evdref c in
     Proofview.Unsafe.tclEVARS !evdref >>= fun () ->
     Proofview.tclUNIT ans);
   define "realizer_base_term" (constr @-> tac constr) (fun c ->
-    Proofview.tclENV >>= fun env ->
     Proofview.tclEVARMAP >>= fun sigma ->
+    let env = Global.env () in
     let evdref = ref sigma in
     let ans = compute_realizer_term ~opaque_access env evdref c in
     Proofview.Unsafe.tclEVARS !evdref >>= fun () ->
