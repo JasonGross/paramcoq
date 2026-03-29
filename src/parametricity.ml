@@ -527,8 +527,13 @@ and translate_inductive order env evdr (ind, names) =
   with Not_found -> error Pp.(str "The inductive '" ++ pr_global_for_missing (GlobRef.IndRef ind) ++ str "' has no registered translation.")
 
 and translate_constructor order env evdr ((ind, i), u) =
-  let (ind, u) = destInd !evdr (translate_inductive order env evdr (ind,u)) in
-  mkConstructU ((ind, i), u)
+  try
+    let evd, constr = fresh_global ~rigid:Evd.univ_rigid ~names:u env.env !evdr (Relations.get_constructor order (ind, i)) in
+    evdr := evd;
+    constr
+  with Not_found ->
+    let (ind, u) = destInd !evdr (translate_inductive order env evdr (ind,u)) in
+    mkConstructU ((ind, i), u)
 
 and translate_case_info order env ci =
   let ci_ind =

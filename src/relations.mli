@@ -26,6 +26,7 @@ val declare_variable_relation :
   int -> Names.variable -> Names.Constant.t -> unit
 val get_constant : int -> Names.Constant.t -> Names.GlobRef.t
 val get_inductive : int -> Names.inductive -> Names.GlobRef.t
+val get_constructor : int -> Names.constructor -> Names.GlobRef.t
 val get_variable : int -> Names.variable -> Names.Constant.t
 val is_referenced : int -> GlobRef.t -> bool
 

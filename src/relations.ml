@@ -105,9 +105,13 @@ let get_constant n c =
   let map = IntMap.find n !relations in
   GMap.find (GlobRef.ConstRef c) map
 
-let get_inductive n i = 
+let get_inductive n i =
   let map = IntMap.find n !relations in
   GMap.find (GlobRef.IndRef i) map
+
+let get_constructor n c =
+  let map = IntMap.find n !relations in
+  GMap.find (GlobRef.ConstructRef c) map
 
 let get_variable n v = 
   let map = IntMap.find n !relations in
