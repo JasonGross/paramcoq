@@ -139,11 +139,15 @@ let warn_missing_base =
 
 let cast_sort evdref s = match ESorts.kind !evdref s with
 | Prop -> EConstr.mkSProp
-| Set ->
+| SProp -> EConstr.mkSort s
+| Set | Type _ ->
   let sigma, lvl = Evd.new_univ_level_variable UState.univ_flexible !evdref in
   let () = evdref := sigma in
   EConstr.mkType (Univ.Universe.make lvl)
-| _ -> EConstr.mkSort s
+| QSort (q, _) ->
+  let sigma, lvl = Evd.new_univ_level_variable UState.univ_flexible !evdref in
+  let () = evdref := sigma in
+  EConstr.mkSort (ESorts.make (Sorts.qsort q (Univ.Universe.make lvl)))
 
 (* [prime order index c] replace all the free variable in c by its [index]-projection where 0 <= index < order.
  * Exemple, if c is a well-defined term in context x, y, z |- c, then [prime order index c] is
