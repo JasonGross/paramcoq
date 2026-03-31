@@ -4,7 +4,7 @@
 COQBIN?=$(dir $(shell which coqtop))
 COQC := $(COQBIN)coqc
 PARAMLIBS := -I ../src
-EXAMPLES := example.v ListQueue.v features.v wadler.v bug.v bug2.v bug3.v bug4.v bug5.v bug6.v bug7.v dummyFix.v exmNotParametric.v
+EXAMPLES := example.v ListQueue.v features.v wadler.v bug.v bug2.v bug3.v bug4.v bug5.v bug6.v bug7.v bug8.v dummyFix.v exmNotParametric.v
 
 all:: Parametricity.vo
 
@@ -17,6 +17,7 @@ wadler.vo: wadler.v Parametricity.vo
 bug.vo: bug.v Parametricity.vo
 bug6.vo: bug6.v
 bug7.vo: bug7.v
+bug8.vo: bug8.v
 bug%.vo: bug%.v Parametricity.vo
 
 # native eats too much memory, see eg https://gitlab.com/coq/coq/-/jobs/1144081161

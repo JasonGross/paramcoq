@@ -48,6 +48,14 @@ let recheck env evd t =
   t
   end ()
 
+(* Replace algebraic universe sorts (e.g. Type@{max(Set+1,u)}) with fresh
+   universe variables. This prevents "Unable to handle arbitrary u+k <= v
+   constraints" errors during universe minimization. *)
+let refresh_universes env evd t =
+  let sigma, t = Evarsolve.refresh_universes ~status:Evd.univ_flexible
+      (Some false) env !evd t in
+  evd := sigma; t
+
 [@@@ocaml.warning "-40"]
 let error = CErrors.user_err
 let ongoing_translation = Summary.ref false ~name:"parametricity ongoing translation"
@@ -585,9 +593,11 @@ let compute_base_term ~opaque_access env evdref c =
 let compute_realizer_type ~opaque_access env evdref c =
   let module P = Parametricity.WithOpaqueAccess(struct let access = opaque_access end) in
   let typ = Retyping.get_type_of env !evdref c in
+  let typ = refresh_universes env evdref typ in
   let typ_R = P.translate_type 2 evdref env typ in
   let sub = range (fun i -> Parametricity.prime env evdref 2 i c) 2 in
   let typ_R = Vars.substl sub typ_R in
+  let typ_R = refresh_universes env evdref typ_R in
   recheck env evdref typ_R
 
 let compute_realizer_term ~opaque_access env evdref c =
