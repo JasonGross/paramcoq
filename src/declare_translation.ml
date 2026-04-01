@@ -570,7 +570,8 @@ let translate_command ~opaque_access arity c name =
 
 let compute_base_type env evdref c =
   let typ = Retyping.get_type_of env !evdref c in
-  Parametricity.prime env evdref 2 1 typ
+  let typ = Parametricity.prime env evdref 2 1 typ in
+  recheck env evdref typ
 
 let compute_base_term ~opaque_access env evdref c =
   let sigma = !evdref in
@@ -588,7 +589,8 @@ let compute_base_term ~opaque_access env evdref c =
   in
   let body = EConstr.of_constr body in
   let body = EConstr.Vars.subst_instance_constr u body in
-  Parametricity.prime env evdref 2 1 body
+  let body = Parametricity.prime env evdref 2 1 body in
+  recheck env evdref body
 
 let compute_realizer_type ~opaque_access env evdref c =
   let module P = Parametricity.WithOpaqueAccess(struct let access = opaque_access end) in

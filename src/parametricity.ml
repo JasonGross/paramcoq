@@ -1415,18 +1415,6 @@ and translate_mind_inductive name order evdr env ikn mut_entry inst (env_params,
       end
   }
 
-let relation order evd env t : constr =
-  (* FIXME: properly compute relevances instead of hacking here *)
-  CWarnings.with_warn "-bad-relevance" begin fun () ->
-    relation order evd env t
-  end ()
-
-let translate order evd env t : constr =
-  (* FIXME: properly compute relevances instead of hacking here *)
-  CWarnings.with_warn "-bad-relevance" begin fun () ->
-    translate order evd env t
-  end ()
-
 let translate_mind_body name order evdr env kn b inst : mutual_inductive_entry =
   (* FIXME: properly compute relevances instead of hacking here *)
   CWarnings.with_warn "-bad-relevance" begin fun () ->
