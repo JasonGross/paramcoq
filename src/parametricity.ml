@@ -1149,6 +1149,12 @@ let fix_template_params order evdr env temp b params =
   in
   umap, temp.template_concl, (uctx, default_univs), decls
 
+let get_template_instance mib u = match mib.mind_template with
+| None -> u
+| Some templ ->
+  let () = assert (UVars.Instance.is_empty u) in
+  templ.template_defaults
+
 let rec translate_mind_body name order evdr env kn b inst =
   let () = assert (List.is_empty @@ Environ.rel_context env) in
   (* XXX: What is going on here? This doesn't make sense after cumulativity *)
@@ -1158,7 +1164,7 @@ let rec translate_mind_body name order evdr env kn b inst =
   debug_evar_map [`Inductive] "translate_mind, evd = \n" env !evdr;
   let env0 = { env; env_R = env } in
   let envs =
-    let params = CVars.subst_instance_context inst b.mind_params_ctxt in
+    let params = CVars.subst_instance_context (get_template_instance b inst) b.mind_params_ctxt in
     let params = List.map of_rel_decl params in
     let params_R = translate_rel_context order evdr env0 params in
     let env_params = push_rel_context params params_R env0 in
@@ -1184,7 +1190,7 @@ let rec translate_mind_body name order evdr env kn b inst =
 
   debug_string [`Inductive] "translatation of params ...";
   let mind_entry_params_R =
-    translate_mind_param order evdr env (CVars.subst_instance_context inst b.mind_params_ctxt)
+    translate_mind_param order evdr env (CVars.subst_instance_context (get_template_instance b inst) b.mind_params_ctxt)
   in
   let template_univs, mind_entry_params_R = match b.mind_template with
   | None -> None, mind_entry_params_R
@@ -1289,7 +1295,7 @@ and translate_mind_inductive name order evdr env ikn mut_entry inst (env_params,
         let l = Array.to_list e.mind_user_lc in
         let ntyps = Array.length mut_entry.mind_packets in
         let l = List.map (Inductive.abstract_constructor_type_relatively_to_inductive_types_context ntyps (fst ikn)) l in
-        let l = List.map (CVars.subst_instance_constr inst) l in
+        let l = List.map (CVars.subst_instance_constr (get_template_instance mut_entry inst)) l in
         debug_string [`Inductive] "before translation :";
         List.iter (debug [`Inductive] "" env_arities !evdr) (List.map of_constr l);
         let l =  List.map (fun x -> snd (decompose_prod_n_decls !evdr p x)) (List.map of_constr l) in
